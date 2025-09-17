@@ -38,6 +38,7 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     fun setCurrentReminder(reminder: Reminder?) {
         _currentReminder.value = reminder
     }
+
     @SuppressLint("ScheduleExactAlarm")
     fun insert(reminder: Reminder, context: Context) = viewModelScope.launch {
         repository.insert(reminder)
@@ -54,18 +55,18 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     }
 
     @SuppressLint("ScheduleExactAlarm")
-    fun update(reminder: Reminder, context: Context) = viewModelScope.launch {
-        // Cancel previous alarm
-        NotificationUtils.cancelNotification(context, reminder)
-
+    fun update(reminder: Reminder, context: Context, reschedule: Boolean = true) = viewModelScope.launch {
         repository.update(reminder)
 
-        // Reschedule both
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationUtils.scheduleNotification(context, reminder)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            NotificationUtils.scheduleAlarm(reminder, context)
+        if (reschedule) {
+            // Cancel previous alarms/notifications
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationUtils.cancelNotification(context, reminder)
+                NotificationUtils.scheduleNotification(context, reminder)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                NotificationUtils.scheduleAlarm(reminder, context)
+            }
         }
     }
 
@@ -75,5 +76,4 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
             NotificationUtils.cancelNotification(context, reminder)
         }
     }
-
 }
