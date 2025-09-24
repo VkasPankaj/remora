@@ -11,7 +11,7 @@ data class Reminder(
     val description: String? = null,
     val dueDateTime: LocalDateTime,
     val priority: Priority = Priority.LOW,
-    val isCompleted: Boolean = false
+    var isCompleted: Boolean = false
 )
 
 enum class Priority {

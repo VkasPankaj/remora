@@ -36,7 +36,7 @@ import java.time.LocalTime
 import java.util.*
 
 /** ---------- State holder ---------- */
-data class ReminderFormState @RequiresApi(Build.VERSION_CODES.O) constructor(
+data class ReminderFormState  constructor(
     val title: String = "",
     val description: String = "",
     val dueDateTime: LocalDateTime = LocalDateTime.now(),
@@ -50,7 +50,7 @@ fun Priority.color(): Color = when (this) {
 }
 
 /** ---------- Main Screen ---------- */
-@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun AddEditReminderScreen(
     navController: NavController,
@@ -62,13 +62,16 @@ fun AddEditReminderScreen(
     val scrollState = rememberScrollState()
 
     LaunchedEffect(currentReminder) {
-        currentReminder?.let {
+        if (currentReminder != null) {
             formState = formState.copy(
-                title = it.title,
-                description = it.description.orEmpty(),
-                dueDateTime = it.dueDateTime,
-                priority = it.priority
+                title = currentReminder!!.title,
+                description = currentReminder!!.description.orEmpty(),
+                dueDateTime = currentReminder!!.dueDateTime,
+                priority = currentReminder!!.priority
             )
+        } else {
+            // reset to defaults for "new task"
+            formState = ReminderFormState()
         }
     }
 
@@ -169,7 +172,6 @@ fun AddEditReminderScreen(
 }
 
 /** ---------- Reminder Form ---------- */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ReminderForm(
     formState: ReminderFormState,
@@ -275,7 +277,7 @@ fun ReminderForm(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Priority.values().forEach { priority ->
+                Priority.entries.forEach { priority ->
                     val selected = priority == formState.priority
                     OutlinedButton(
                         onClick = { onFormChange(formState.copy(priority = priority)) },

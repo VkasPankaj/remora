@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.belazy.remora.data.ReminderDatabase
@@ -39,41 +40,30 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
         _currentReminder.value = reminder
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @SuppressLint("ScheduleExactAlarm")
     fun insert(reminder: Reminder, context: Context) = viewModelScope.launch {
         repository.insert(reminder)
 
-        // Schedule normal notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationUtils.scheduleNotification(context, reminder)
-        }
 
         // Schedule full-screen alarm (opens AlarmActivity)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            NotificationUtils.scheduleAlarm(reminder, context)
-        }
+        NotificationUtils.scheduleAlarm(reminder, context)
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @SuppressLint("ScheduleExactAlarm")
     fun update(reminder: Reminder, context: Context, reschedule: Boolean = true) = viewModelScope.launch {
         repository.update(reminder)
 
         if (reschedule) {
             // Cancel previous alarms/notifications
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationUtils.cancelNotification(context, reminder)
-                NotificationUtils.scheduleNotification(context, reminder)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                NotificationUtils.scheduleAlarm(reminder, context)
-            }
+            NotificationUtils.cancelNotification(context, reminder)
+            NotificationUtils.scheduleAlarm( reminder,context)
         }
     }
 
     fun delete(reminder: Reminder, context: Context) = viewModelScope.launch {
         repository.delete(reminder)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationUtils.cancelNotification(context, reminder)
-        }
+        NotificationUtils.cancelNotification(context, reminder)
     }
 }
